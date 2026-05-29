@@ -1,141 +1,711 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- SEO Meta Tags -->
-    <title>TaskFlow — Modern To-Do List</title>
-    <meta
-      name="description"
-      content="A beautiful, modern to-do list app to help you stay organized and productive. Tasks are saved automatically in your browser."
-    />
-
-    <!-- Google Fonts: Inter for clean, modern typography -->
+    <title>TaskFlow Pro — Ultimate Productivity Suite by Tanvir</title>
+    <meta name="description" content="The ultimate productivity app with tasks, pomodoro timer, habit tracker, goal tracking, calendar, class schedule, and much more." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-
-    <!-- Link to our external stylesheet -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
   </head>
 
   <body>
-    <!-- ========================================================
-         BACKGROUND DECORATION
-         Subtle animated blobs to give the page visual depth
-    ======================================================== -->
+    <!-- Custom background image overlay -->
+    <div id="bg-overlay" class="bg-overlay" aria-hidden="true"></div>
+
+    <!-- Animated background blobs -->
     <div class="bg-blob bg-blob--1" aria-hidden="true"></div>
     <div class="bg-blob bg-blob--2" aria-hidden="true"></div>
+    <div class="bg-blob bg-blob--3" aria-hidden="true"></div>
 
-    <!-- ========================================================
-         MAIN APP CONTAINER
-         Everything lives inside this centered card
-    ======================================================== -->
-    <main class="app-container" role="main">
+    <!-- ====================================================
+         MODALS (outside shell so they overlay everything)
+    ==================================================== -->
 
-      <!-- ---- APP HEADER ---- -->
-      <header class="app-header">
-        <!-- App icon / logo -->
-        <div class="app-logo" aria-hidden="true">✦</div>
-
-        <div class="app-title-group">
-          <h1 class="app-title">TaskFlow</h1>
-          <p class="app-subtitle">Stay organized, stay ahead</p>
-        </div>
-
-        <!-- Live task counters shown in the header -->
-        <div class="task-stats" aria-live="polite" aria-atomic="true">
-          <div class="stat-pill" id="stat-total" title="Total tasks">
-            <span class="stat-number" id="stat-total-num">0</span>
-            <span class="stat-label">Total</span>
-          </div>
-          <div class="stat-pill stat-pill--done" id="stat-done" title="Completed tasks">
-            <span class="stat-number" id="stat-done-num">0</span>
-            <span class="stat-label">Done</span>
-          </div>
-        </div>
-      </header>
-
-      <!-- ---- PROGRESS BAR ---- -->
-      <!-- Shows percentage of completed tasks visually -->
-      <div class="progress-bar-wrap" aria-label="Task completion progress">
-        <div class="progress-bar" id="progress-bar" role="progressbar"
-             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+    <!-- Level-Up Modal -->
+    <div class="modal-overlay" id="levelup-modal" role="dialog" aria-modal="true" aria-labelledby="levelup-title" aria-hidden="true">
+      <div class="modal-card levelup-card">
+        <div class="levelup-icon" id="levelup-icon">🏆</div>
+        <h2 class="levelup-title" id="levelup-title">Level Up!</h2>
+        <p class="levelup-msg" id="levelup-msg">You reached Level 2!</p>
+        <button class="modal-btn modal-btn--save" id="levelup-close-btn">Awesome! 🎉</button>
       </div>
+    </div>
 
-      <!-- ---- TASK INPUT SECTION ---- -->
-      <section class="input-section" aria-label="Add a new task">
-        <form class="input-form" id="task-form" novalidate>
-          <!-- Text input where the user types a new task -->
-          <input
-            type="text"
-            id="task-input"
-            class="task-input"
-            placeholder="What needs to be done?"
-            maxlength="120"
-            autocomplete="off"
-            aria-label="New task description"
-            required
-          />
+    <!-- Daily Reward Modal -->
+    <div class="modal-overlay" id="reward-modal" role="dialog" aria-modal="true" aria-labelledby="reward-title" aria-hidden="true">
+      <div class="modal-card reward-card">
+        <div class="reward-icon" id="reward-icon">🎁</div>
+        <h2 class="reward-title" id="reward-title">Daily Reward!</h2>
+        <p class="reward-msg" id="reward-msg">You completed 5 tasks today!</p>
+        <button class="modal-btn modal-btn--save" id="reward-close-btn">Claim Reward! ✨</button>
+      </div>
+    </div>
 
-          <!-- Button to submit / add the task -->
-          <button type="submit" class="add-btn" id="add-btn" aria-label="Add task">
-            <span class="add-btn__icon" aria-hidden="true">+</span>
-            <span class="add-btn__text">Add</span>
-          </button>
-        </form>
-
-        <!-- Character counter that updates as user types -->
-        <div class="char-counter" id="char-counter" aria-live="polite">
-          <span id="char-count">0</span>/120
+    <!-- Edit Task Modal -->
+    <div class="modal-overlay" id="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title" aria-hidden="true">
+      <div class="modal-card">
+        <h2 class="modal-title" id="edit-modal-title">✏️ Edit Task</h2>
+        <input type="text" id="edit-task-input" class="task-input modal-input" maxlength="120" placeholder="Task name..." />
+        <div class="extra-fields">
+          <div class="field-group">
+            <label for="edit-due-date" class="field-label">📅 Due Date</label>
+            <input type="date" id="edit-due-date" class="field-input date-input" />
+          </div>
+          <div class="field-group">
+            <label for="edit-priority" class="field-label">🎯 Priority</label>
+            <select id="edit-priority" class="field-input select-input">
+              <option value="medium">🟡 Medium</option>
+              <option value="high">🔴 High</option>
+              <option value="low">🟢 Low</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="edit-category" class="field-label">🏷️ Category</label>
+            <select id="edit-category" class="field-input select-input">
+              <option value="general">📌 General</option>
+              <option value="study">📚 Study</option>
+              <option value="work">💼 Work</option>
+              <option value="personal">🧘 Personal</option>
+              <option value="shopping">🛒 Shopping</option>
+              <option value="travel">✈️ Travel</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="edit-repeat" class="field-label">🔁 Repeat</label>
+            <select id="edit-repeat" class="field-input select-input">
+              <option value="none">None</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
         </div>
-      </section>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn--cancel" id="edit-cancel-btn">Cancel</button>
+          <button class="modal-btn modal-btn--save" id="edit-save-btn">Save Changes</button>
+        </div>
+      </div>
+    </div>
 
-      <!-- ---- FILTER TABS ---- -->
-      <!-- Let the user switch between All / Active / Completed views -->
-      <nav class="filter-tabs" aria-label="Filter tasks">
-        <button class="filter-tab filter-tab--active" data-filter="all" id="filter-all">
-          All
-        </button>
-        <button class="filter-tab" data-filter="active" id="filter-active">
-          Active
-        </button>
-        <button class="filter-tab" data-filter="completed" id="filter-completed">
-          Completed
-        </button>
+    <!-- ====================================================
+         APP SHELL: Sidebar + Main Content
+    ==================================================== -->
+    <div class="app-shell">
+
+      <!-- SIDEBAR NAVIGATION -->
+      <nav class="sidebar" id="sidebar" aria-label="Main navigation">
+        <div class="sidebar-header">
+          <div class="sidebar-logo" aria-hidden="true">✦</div>
+          <span class="sidebar-brand">TaskFlow</span>
+          <span class="sidebar-pro">PRO</span>
+        </div>
+
+        <div class="sidebar-nav" role="menubar">
+          <button class="nav-btn nav-btn--active" data-view="tasks" id="nav-tasks" role="menuitem" aria-label="Tasks">
+            <span class="nav-icon" aria-hidden="true">📋</span>
+            <span class="nav-label">Tasks</span>
+          </button>
+          <button class="nav-btn" data-view="pomodoro" id="nav-pomodoro" role="menuitem" aria-label="Pomodoro Timer">
+            <span class="nav-icon" aria-hidden="true">⏱️</span>
+            <span class="nav-label">Pomodoro</span>
+          </button>
+          <button class="nav-btn" data-view="calendar" id="nav-calendar" role="menuitem" aria-label="Calendar">
+            <span class="nav-icon" aria-hidden="true">📅</span>
+            <span class="nav-label">Calendar</span>
+          </button>
+          <button class="nav-btn" data-view="habits" id="nav-habits" role="menuitem" aria-label="Habit Tracker">
+            <span class="nav-icon" aria-hidden="true">🔥</span>
+            <span class="nav-label">Habits</span>
+          </button>
+          <button class="nav-btn" data-view="goals" id="nav-goals" role="menuitem" aria-label="Goals & Vision">
+            <span class="nav-icon" aria-hidden="true">🎯</span>
+            <span class="nav-label">Goals</span>
+          </button>
+          <button class="nav-btn" data-view="schedule" id="nav-schedule" role="menuitem" aria-label="Class Schedule">
+            <span class="nav-icon" aria-hidden="true">🏫</span>
+            <span class="nav-label">Schedule</span>
+          </button>
+          <button class="nav-btn" data-view="settings" id="nav-settings" role="menuitem" aria-label="Settings">
+            <span class="nav-icon" aria-hidden="true">⚙️</span>
+            <span class="nav-label">Settings</span>
+          </button>
+        </div>
+
+        <!-- XP / Level bar in sidebar -->
+        <div class="sidebar-level" id="sidebar-level" aria-label="Level progress">
+          <div class="level-badge" id="level-badge">Lv.1</div>
+          <div class="level-info">
+            <span class="level-text" id="level-text">Level 1</span>
+            <div class="xp-bar-wrap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="XP progress">
+              <div class="xp-bar" id="xp-bar" style="width:0%"></div>
+            </div>
+            <span class="xp-text" id="xp-text">0 / 10 XP</span>
+          </div>
+        </div>
+
+        <!-- Brand footer inside sidebar -->
+        <div class="sidebar-footer">
+          <p class="sidebar-credit">Made by <strong>Tanvir</strong></p>
+        </div>
       </nav>
 
-      <!-- ---- TASK LIST ---- -->
-      <!-- Tasks are dynamically injected here by script.js -->
-      <section aria-label="Task list">
-        <ul class="task-list" id="task-list" aria-live="polite">
-          <!-- Tasks rendered here by JavaScript -->
-        </ul>
+      <!-- MOBILE TOP BAR -->
+      <div class="mobile-topbar">
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open navigation menu" aria-expanded="false">☰</button>
+        <span class="mobile-title">✦ TaskFlow Pro</span>
+        <span class="mobile-level-badge" id="mobile-level-badge">Lv.1</span>
+      </div>
 
-        <!-- Empty-state illustration shown when there are no tasks to display -->
-        <div class="empty-state" id="empty-state" aria-hidden="true">
-          <div class="empty-state__icon">🎯</div>
-          <p class="empty-state__text">No tasks here yet!</p>
-          <p class="empty-state__hint">Add a task above to get started</p>
-        </div>
-      </section>
+      <!-- MAIN CONTENT AREA -->
+      <div class="main-content" id="main-content">
 
-      <!-- ---- FOOTER ACTIONS ---- -->
-      <!-- Bulk actions like clearing completed tasks -->
-      <footer class="app-footer" id="app-footer">
-        <span class="footer-count" id="footer-remaining">0 tasks remaining</span>
-        <button class="clear-btn" id="clear-completed-btn" aria-label="Clear all completed tasks">
-          Clear completed
-        </button>
-      </footer>
+        <!-- =================================================
+             VIEW 1: TASKS (default active view)
+        ================================================= -->
+        <section id="view-tasks" class="view view--active" aria-label="Tasks">
 
-    </main><!-- /.app-container -->
+          <!-- View header with quote and theme toggle -->
+          <div class="view-header">
+            <div class="view-header-left">
+              <h2 class="view-title">My Tasks</h2>
+              <p class="view-subtitle" id="quote-text" aria-live="polite">Loading inspiration...</p>
+            </div>
+            <div class="view-header-right">
+              <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode">
+                <span id="theme-icon">🌙</span>
+                <span id="theme-label">Dark</span>
+              </button>
+            </div>
+          </div>
 
-    <!-- Link to our external JavaScript file (deferred so HTML loads first) -->
+          <!-- Task counters -->
+          <div class="task-counters" aria-live="polite" aria-atomic="true">
+            <div class="counter-card counter-total">
+              <span class="counter-num" id="counter-total">0</span>
+              <span class="counter-lbl">Tasks Total</span>
+            </div>
+            <div class="counter-card counter-done">
+              <span class="counter-num" id="counter-done">0</span>
+              <span class="counter-lbl">Completed</span>
+            </div>
+            <div class="counter-card counter-remain">
+              <span class="counter-num" id="counter-remain">0</span>
+              <span class="counter-lbl">Remaining</span>
+            </div>
+          </div>
+
+          <!-- Progress bar -->
+          <div class="progress-bar-wrap" aria-label="Task completion progress">
+            <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            <span class="progress-pct" id="progress-pct">0%</span>
+          </div>
+
+          <!-- Task input form -->
+          <section class="input-section glass-card" aria-label="Add a new task">
+            <form class="input-form" id="task-form" novalidate>
+              <input type="text" id="task-input" class="task-input" placeholder="What needs to be done?" maxlength="120" autocomplete="off" aria-label="New task description" required />
+              <button type="submit" class="add-btn" id="add-btn" aria-label="Add task">
+                <span aria-hidden="true">+</span> Add
+              </button>
+            </form>
+
+            <!-- Extra task fields -->
+            <div class="extra-fields">
+              <div class="field-group">
+                <label for="due-date-input" class="field-label">📅 Due Date</label>
+                <input type="date" id="due-date-input" class="field-input date-input" />
+              </div>
+              <div class="field-group">
+                <label for="priority-select" class="field-label">🎯 Priority</label>
+                <select id="priority-select" class="field-input select-input">
+                  <option value="medium">🟡 Medium</option>
+                  <option value="high">🔴 High</option>
+                  <option value="low">🟢 Low</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="category-select" class="field-label">🏷️ Category</label>
+                <select id="category-select" class="field-input select-input">
+                  <option value="general">📌 General</option>
+                  <option value="study">📚 Study</option>
+                  <option value="work">💼 Work</option>
+                  <option value="personal">🧘 Personal</option>
+                  <option value="shopping">🛒 Shopping</option>
+                  <option value="travel">✈️ Travel</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="repeat-select" class="field-label">🔁 Repeat</label>
+                <select id="repeat-select" class="field-input select-input">
+                  <option value="none">None</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="char-counter" id="char-counter" aria-live="polite">
+              <span id="char-count">0</span>/120
+            </div>
+          </section>
+
+          <!-- Search, sort, export toolbar -->
+          <div class="toolbar">
+            <div class="search-wrap">
+              <span class="search-icon" aria-hidden="true">🔍</span>
+              <input type="search" id="search-input" class="search-input" placeholder="Search tasks..." aria-label="Search tasks" />
+            </div>
+            <select id="sort-select" class="field-input select-input sort-select" aria-label="Sort tasks">
+              <option value="newest">⬇️ Newest</option>
+              <option value="oldest">⬆️ Oldest</option>
+              <option value="priority">🎯 Priority</option>
+              <option value="duedate">📅 Due Date</option>
+            </select>
+          </div>
+
+          <!-- Export / Import bar -->
+          <div class="export-bar" aria-label="Export and import options">
+            <button class="export-btn" id="export-pdf-btn" aria-label="Export tasks to PDF">📄 PDF</button>
+            <button class="export-btn" id="export-csv-btn" aria-label="Export tasks to Excel/CSV">📊 Excel</button>
+            <label class="export-btn import-label" for="import-file-input" tabindex="0" role="button" aria-label="Import tasks from JSON">📥 Import</label>
+            <input type="file" id="import-file-input" accept=".json" aria-label="Select JSON file to import" />
+          </div>
+
+          <!-- Category filter chips -->
+          <div class="category-chips" id="category-chips" role="group" aria-label="Filter by category">
+            <button class="cat-chip cat-chip--active" data-cat="all" id="cat-all">All</button>
+            <button class="cat-chip" data-cat="general" id="cat-general">📌 General</button>
+            <button class="cat-chip" data-cat="study" id="cat-study">📚 Study</button>
+            <button class="cat-chip" data-cat="work" id="cat-work">💼 Work</button>
+            <button class="cat-chip" data-cat="personal" id="cat-personal">🧘 Personal</button>
+            <button class="cat-chip" data-cat="shopping" id="cat-shopping">🛒 Shopping</button>
+            <button class="cat-chip" data-cat="travel" id="cat-travel">✈️ Travel</button>
+          </div>
+
+          <!-- Status filter tabs -->
+          <nav class="filter-tabs" aria-label="Filter tasks by status">
+            <button class="filter-tab filter-tab--active" data-filter="all" id="filter-all">All</button>
+            <button class="filter-tab" data-filter="active" id="filter-active">Active</button>
+            <button class="filter-tab" data-filter="completed" id="filter-completed">Completed</button>
+            <button class="filter-tab" data-filter="archived" id="filter-archived">📦 Archived</button>
+          </nav>
+
+          <!-- Task list -->
+          <section aria-label="Task list">
+            <ul class="task-list" id="task-list" aria-live="polite"></ul>
+            <div class="empty-state" id="empty-state" aria-hidden="true">
+              <div class="empty-state__icon" aria-hidden="true">🎯</div>
+              <p class="empty-state__text">No tasks here yet!</p>
+              <p class="empty-state__hint">Add a task above to get started</p>
+            </div>
+          </section>
+
+          <!-- Footer action buttons -->
+          <div class="app-footer-actions">
+            <button class="action-btn archive-btn" id="archive-completed-btn">📦 Archive Done</button>
+            <button class="action-btn clear-btn" id="clear-completed-btn">🗑️ Clear Done</button>
+          </div>
+        </section>
+
+        <!-- =================================================
+             VIEW 2: POMODORO TIMER
+        ================================================= -->
+        <section id="view-pomodoro" class="view" aria-label="Pomodoro timer">
+          <div class="view-header">
+            <h2 class="view-title">⏱️ Pomodoro Timer</h2>
+            <p class="view-subtitle">Focus deeply. Break smartly. Achieve more.</p>
+          </div>
+
+          <div class="pomodoro-card glass-card">
+            <!-- Mode selection tabs -->
+            <div class="pomo-mode-tabs" role="tablist" aria-label="Timer mode">
+              <button class="pomo-tab pomo-tab--active" data-mode="study" id="pomo-study-tab" role="tab" aria-selected="true">📚 Study (25 min)</button>
+              <button class="pomo-tab" data-mode="break" id="pomo-break-tab" role="tab" aria-selected="false">☕ Break (5 min)</button>
+              <button class="pomo-tab" data-mode="longbreak" id="pomo-longbreak-tab" role="tab" aria-selected="false">🛌 Long Break (15 min)</button>
+            </div>
+
+            <!-- SVG ring timer -->
+            <div class="pomodoro-ring-wrap" aria-label="Timer ring">
+              <svg class="pomo-ring" viewBox="0 0 220 220" aria-hidden="true">
+                <circle class="pomo-ring-bg"       cx="110" cy="110" r="96" />
+                <circle class="pomo-ring-progress" cx="110" cy="110" r="96"
+                        id="pomo-ring-progress"
+                        stroke-dasharray="603"
+                        stroke-dashoffset="0" />
+              </svg>
+              <div class="pomo-time-display">
+                <span class="pomo-time" id="pomo-time" aria-live="polite" aria-atomic="true">25:00</span>
+                <span class="pomo-status" id="pomo-status">Ready to focus</span>
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="pomo-controls">
+              <button class="pomo-btn pomo-btn--start" id="pomo-start-btn" aria-label="Start timer">▶ Start</button>
+              <button class="pomo-btn pomo-btn--pause" id="pomo-pause-btn" aria-label="Pause timer" disabled>⏸ Pause</button>
+              <button class="pomo-btn pomo-btn--reset" id="pomo-reset-btn" aria-label="Reset timer">↺ Reset</button>
+            </div>
+
+            <!-- Session tracker -->
+            <div class="pomo-sessions">
+              <span class="pomo-sessions-label">Sessions today:</span>
+              <div class="pomo-dots" id="pomo-dots" aria-label="Completed sessions"></div>
+              <span class="pomo-sessions-count" id="pomo-sessions-count">0 sessions</span>
+            </div>
+          </div>
+
+          <!-- Tip card -->
+          <div class="pomo-tip glass-card">
+            <h3 class="glass-card-title">💡 The Pomodoro Technique</h3>
+            <ol class="pomo-tip-list">
+              <li>Choose a task and focus for <strong>25 minutes</strong></li>
+              <li>Take a <strong>5-minute</strong> short break</li>
+              <li>After <strong>4 sessions</strong>, take a 15-min long break</li>
+              <li>Repeat — your brain will thank you! 🧠</li>
+            </ol>
+            <p class="pomo-tip-note">🏆 Perfect for students and deep work!</p>
+          </div>
+        </section>
+
+        <!-- =================================================
+             VIEW 3: CALENDAR
+        ================================================= -->
+        <section id="view-calendar" class="view" aria-label="Calendar view">
+          <div class="view-header">
+            <h2 class="view-title">📅 Calendar</h2>
+            <p class="view-subtitle">Visualize your tasks by date</p>
+          </div>
+
+          <div class="calendar-card glass-card">
+            <!-- Month navigation -->
+            <div class="calendar-nav" aria-label="Month navigation">
+              <button class="cal-nav-btn" id="cal-prev-btn" aria-label="Previous month">‹</button>
+              <h3 class="cal-month-title" id="cal-month-title">May 2026</h3>
+              <button class="cal-nav-btn" id="cal-next-btn" aria-label="Next month">›</button>
+            </div>
+
+            <!-- Weekday headers -->
+            <div class="cal-weekdays" aria-hidden="true">
+              <span>Sun</span><span>Mon</span><span>Tue</span>
+              <span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+
+            <!-- Day cells - rendered by JS -->
+            <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Calendar days"></div>
+
+            <!-- Tasks for selected date -->
+            <div class="cal-selected-tasks" id="cal-selected-tasks" aria-live="polite">
+              <h4 class="cal-tasks-title" id="cal-tasks-title">📌 Select a date to view tasks</h4>
+              <ul class="cal-task-list" id="cal-task-list"></ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================================================
+             VIEW 4: HABIT TRACKER
+        ================================================= -->
+        <section id="view-habits" class="view" aria-label="Habit tracker">
+          <div class="view-header">
+            <h2 class="view-title">🔥 Habit Tracker</h2>
+            <p class="view-subtitle">Build streaks. Stay consistent. Change your life.</p>
+          </div>
+
+          <!-- Add habit form -->
+          <div class="glass-card habit-add-card">
+            <h3 class="glass-card-title">➕ Add a New Habit</h3>
+            <div class="input-form">
+              <select id="habit-emoji-select" class="field-input select-input" style="max-width:110px" aria-label="Habit emoji">
+                <option value="💧">💧 Water</option>
+                <option value="🏃">🏃 Exercise</option>
+                <option value="📖">📖 Read</option>
+                <option value="🧘">🧘 Meditate</option>
+                <option value="😴">😴 Sleep 8h</option>
+                <option value="🥗">🥗 Eat Healthy</option>
+                <option value="✍️">✍️ Journal</option>
+                <option value="🎯">🎯 Focus</option>
+                <option value="🚿">🚿 Cold Shower</option>
+                <option value="🏋️">🏋️ Workout</option>
+              </select>
+              <input type="text" id="habit-input" class="task-input" placeholder="Habit name (e.g. Drink 8 glasses of water)" maxlength="60" aria-label="Habit name" />
+              <button class="add-btn" id="add-habit-btn" aria-label="Add habit">+ Add</button>
+            </div>
+          </div>
+
+          <!-- Habit list - rendered by JS -->
+          <div class="habit-list" id="habit-list" aria-live="polite" aria-label="Your habits"></div>
+        </section>
+
+        <!-- =================================================
+             VIEW 5: GOALS & VISION BOARD
+        ================================================= -->
+        <section id="view-goals" class="view" aria-label="Goals and vision board">
+          <div class="view-header">
+            <h2 class="view-title">🎯 Goals & Vision</h2>
+            <p class="view-subtitle">Daily, weekly, monthly goals and your vision board</p>
+          </div>
+
+          <!-- Goal type tabs -->
+          <div class="goal-tabs" role="tablist" aria-label="Goal period">
+            <button class="goal-tab goal-tab--active" data-gtab="daily"    id="gtab-daily"    role="tab">📅 Daily</button>
+            <button class="goal-tab"                  data-gtab="weekly"   id="gtab-weekly"   role="tab">🗓️ Weekly</button>
+            <button class="goal-tab"                  data-gtab="monthly"  id="gtab-monthly"  role="tab">📆 Monthly</button>
+            <button class="goal-tab"                  data-gtab="tracking" id="gtab-tracking" role="tab">📊 Tracking</button>
+            <button class="goal-tab"                  data-gtab="vision"   id="gtab-vision"   role="tab">🌟 Vision Board</button>
+          </div>
+
+          <!-- Daily Goals Panel -->
+          <div class="goal-panel" id="gpanel-daily" role="tabpanel">
+            <div class="glass-card goal-add-card">
+              <p class="goal-date-label" id="daily-date-label">Today: —</p>
+              <div class="input-form">
+                <input type="text" id="daily-goal-input" class="task-input" placeholder="Today's goal..." maxlength="80" />
+                <button class="add-btn" id="add-daily-goal-btn">+ Add</button>
+              </div>
+            </div>
+            <div class="goal-list" id="daily-goal-list" aria-live="polite"></div>
+          </div>
+
+          <!-- Weekly Goals Panel -->
+          <div class="goal-panel hidden" id="gpanel-weekly" role="tabpanel">
+            <div class="glass-card goal-add-card">
+              <p class="goal-date-label" id="weekly-date-label">This week: —</p>
+              <div class="input-form">
+                <input type="text" id="weekly-goal-input" class="task-input" placeholder="This week's goal..." maxlength="80" />
+                <button class="add-btn" id="add-weekly-goal-btn">+ Add</button>
+              </div>
+            </div>
+            <div class="goal-list" id="weekly-goal-list" aria-live="polite"></div>
+          </div>
+
+          <!-- Monthly Goals Panel -->
+          <div class="goal-panel hidden" id="gpanel-monthly" role="tabpanel">
+            <div class="glass-card goal-add-card">
+              <p class="goal-date-label" id="monthly-date-label">This month: —</p>
+              <div class="input-form">
+                <input type="text" id="monthly-goal-input" class="task-input" placeholder="This month's goal..." maxlength="80" />
+                <button class="add-btn" id="add-monthly-goal-btn">+ Add</button>
+              </div>
+            </div>
+            <div class="goal-list" id="monthly-goal-list" aria-live="polite"></div>
+          </div>
+
+          <!-- Goal Tracking Panel -->
+          <div class="goal-panel hidden" id="gpanel-tracking" role="tabpanel">
+            <div class="glass-card goal-add-card">
+              <h3 class="glass-card-title">📊 Track a Goal</h3>
+              <div class="extra-fields">
+                <div class="field-group" style="grid-column: 1 / -1;">
+                  <label class="field-label">Goal Title</label>
+                  <input type="text" id="tracking-goal-input" class="field-input" placeholder="e.g. Learn JavaScript" maxlength="60" />
+                </div>
+                <div class="field-group">
+                  <label class="field-label">Progress %</label>
+                  <input type="number" id="tracking-progress-input" class="field-input" min="0" max="100" value="0" />
+                </div>
+                <div class="field-group">
+                  <label class="field-label">Icon</label>
+                  <input type="text" id="tracking-icon-input" class="field-input" maxlength="4" value="🎯" placeholder="🎯" />
+                </div>
+              </div>
+              <button class="add-btn" id="add-tracking-goal-btn" style="margin-top:8px">+ Add Goal</button>
+            </div>
+            <div class="tracking-list" id="tracking-goal-list" aria-live="polite"></div>
+          </div>
+
+          <!-- Vision Board Panel -->
+          <div class="goal-panel hidden" id="gpanel-vision" role="tabpanel">
+            <div class="glass-card goal-add-card">
+              <h3 class="glass-card-title">🌟 Add Vision Card</h3>
+              <div class="extra-fields">
+                <div class="field-group" style="grid-column: 1 / -1;">
+                  <label class="field-label">Vision Title</label>
+                  <input type="text" id="vision-title-input" class="field-input" placeholder="Your big dream goal..." maxlength="60" />
+                </div>
+                <div class="field-group">
+                  <label class="field-label">Emoji</label>
+                  <input type="text" id="vision-emoji-input" class="field-input" maxlength="4" value="🌟" />
+                </div>
+                <div class="field-group">
+                  <label class="field-label">Category</label>
+                  <input type="text" id="vision-cat-input" class="field-input" placeholder="e.g. Career" maxlength="20" />
+                </div>
+                <div class="field-group" style="grid-column: 1 / -1;">
+                  <label class="field-label">Description</label>
+                  <input type="text" id="vision-desc-input" class="field-input" placeholder="Describe your vision..." maxlength="100" />
+                </div>
+              </div>
+              <button class="add-btn" id="add-vision-btn" style="margin-top:8px">+ Add Vision</button>
+            </div>
+            <div class="vision-board" id="vision-board" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <!-- =================================================
+             VIEW 6: CLASS SCHEDULE
+        ================================================= -->
+        <section id="view-schedule" class="view" aria-label="Class schedule">
+          <div class="view-header">
+            <h2 class="view-title">🏫 Class Schedule</h2>
+            <p class="view-subtitle">Your weekly university timetable</p>
+          </div>
+
+          <!-- Add class form -->
+          <div class="glass-card schedule-add-card">
+            <h3 class="glass-card-title">➕ Add a Class</h3>
+            <div class="extra-fields schedule-form-grid">
+              <div class="field-group">
+                <label class="field-label">Class Name</label>
+                <input type="text" id="class-name-input" class="field-input" placeholder="e.g. Mathematics" maxlength="30" />
+              </div>
+              <div class="field-group">
+                <label class="field-label">Day</label>
+                <select id="class-day-select" class="field-input select-input">
+                  <option value="Mon">Monday</option>
+                  <option value="Tue">Tuesday</option>
+                  <option value="Wed">Wednesday</option>
+                  <option value="Thu">Thursday</option>
+                  <option value="Fri">Friday</option>
+                  <option value="Sat">Saturday</option>
+                  <option value="Sun">Sunday</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Start Time</label>
+                <input type="time" id="class-start-input" class="field-input" value="09:00" />
+              </div>
+              <div class="field-group">
+                <label class="field-label">End Time</label>
+                <input type="time" id="class-end-input" class="field-input" value="10:00" />
+              </div>
+              <div class="field-group">
+                <label class="field-label">Room / Location</label>
+                <input type="text" id="class-room-input" class="field-input" placeholder="e.g. Room 301" maxlength="20" />
+              </div>
+              <div class="field-group">
+                <label class="field-label">Color</label>
+                <input type="color" id="class-color-input" class="field-input color-input" value="#7c6ef6" />
+              </div>
+            </div>
+            <button class="add-btn" id="add-class-btn" style="margin-top:10px">+ Add Class</button>
+          </div>
+
+          <!-- Weekly schedule grid - rendered by JS -->
+          <div class="schedule-wrap">
+            <div class="schedule-grid" id="schedule-grid" aria-label="Weekly class schedule"></div>
+          </div>
+        </section>
+
+        <!-- =================================================
+             VIEW 7: SETTINGS
+        ================================================= -->
+        <section id="view-settings" class="view" aria-label="Settings">
+          <div class="view-header">
+            <h2 class="view-title">⚙️ Settings</h2>
+            <p class="view-subtitle">Customize your TaskFlow Pro experience</p>
+          </div>
+
+          <!-- Theme picker -->
+          <div class="glass-card settings-card">
+            <h3 class="glass-card-title">🎨 Custom Themes</h3>
+            <div class="theme-grid" id="theme-grid" role="radiogroup" aria-label="Choose a theme">
+              <button class="theme-card theme-card--active" data-theme="dark"      id="theme-dark"      aria-pressed="true">
+                <div class="theme-preview tp-dark"></div>
+                <span>🌙 Dark</span>
+              </button>
+              <button class="theme-card" data-theme="light"     id="theme-light"     aria-pressed="false">
+                <div class="theme-preview tp-light"></div>
+                <span>☀️ Light</span>
+              </button>
+              <button class="theme-card" data-theme="blue"      id="theme-blue"      aria-pressed="false">
+                <div class="theme-preview tp-blue"></div>
+                <span>🔵 Blue</span>
+              </button>
+              <button class="theme-card" data-theme="green"     id="theme-green"     aria-pressed="false">
+                <div class="theme-preview tp-green"></div>
+                <span>🟢 Green</span>
+              </button>
+              <button class="theme-card" data-theme="purple"    id="theme-purple"    aria-pressed="false">
+                <div class="theme-preview tp-purple"></div>
+                <span>💜 Purple</span>
+              </button>
+              <button class="theme-card" data-theme="cyberpunk" id="theme-cyberpunk" aria-pressed="false">
+                <div class="theme-preview tp-cyberpunk"></div>
+                <span>⚡ Cyberpunk</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Custom background upload -->
+          <div class="glass-card settings-card">
+            <h3 class="glass-card-title">🖼️ Custom Background</h3>
+            <p class="settings-desc">Upload your own background image</p>
+            <div class="bg-upload-row">
+              <label for="bg-upload-input" class="export-btn bg-upload-label" tabindex="0" role="button">
+                📁 Choose Image
+              </label>
+              <input type="file" id="bg-upload-input" accept="image/*" aria-label="Upload background image" />
+              <button class="action-btn clear-btn" id="bg-clear-btn">✕ Remove</button>
+            </div>
+            <p class="settings-desc" id="bg-status-text" style="margin-top:8px">No custom background set</p>
+          </div>
+
+          <!-- Sound effects -->
+          <div class="glass-card settings-card">
+            <h3 class="glass-card-title">🔊 Sound Effects</h3>
+            <label class="toggle-row" for="sound-toggle">
+              <span class="toggle-label">Enable Sound Effects</span>
+              <div class="toggle-wrap">
+                <input type="checkbox" id="sound-toggle" class="toggle-checkbox" checked />
+                <div class="toggle-slider"></div>
+              </div>
+            </label>
+            <div class="sound-test-row" style="margin-top:10px">
+              <button class="export-btn" id="test-add-sound">🔊 Added</button>
+              <button class="export-btn" id="test-complete-sound">🔊 Completed</button>
+              <button class="export-btn" id="test-delete-sound">🔊 Deleted</button>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div class="glass-card settings-card">
+            <h3 class="glass-card-title">🔔 Notifications</h3>
+            <label class="toggle-row" for="notif-toggle">
+              <span class="toggle-label">Enable Browser Notifications</span>
+              <div class="toggle-wrap">
+                <input type="checkbox" id="notif-toggle" class="toggle-checkbox" />
+                <div class="toggle-slider"></div>
+              </div>
+            </label>
+            <button class="action-btn archive-btn" id="request-notif-btn" style="margin-top:10px">🔔 Request Permission</button>
+            <p class="settings-desc" id="notif-status" style="margin-top:6px">Status: Not enabled</p>
+          </div>
+
+          <!-- Danger zone -->
+          <div class="glass-card settings-card settings-card--danger">
+            <h3 class="glass-card-title" style="color:var(--clr-danger)">⚠️ Danger Zone</h3>
+            <button class="action-btn clear-btn" id="reset-all-btn">🗑️ Reset All Data</button>
+            <p class="settings-desc" style="margin-top:6px">
+              Permanently deletes all tasks, habits, goals, schedule, and settings.
+            </p>
+          </div>
+        </section>
+
+      </div><!-- /.main-content -->
+    </div><!-- /.app-shell -->
+
+    <!-- PRINT-ONLY brand footer -->
+    <footer class="brand-footer print-only">
+      <p>Crafted with ❤️ by <strong>Tanvir</strong> — TaskFlow Pro © 2025</p>
+    </footer>
+
+    <!-- In-app brand footer (visible on screen too, inside view-tasks) -->
+
     <script src="script.js" defer></script>
   </body>
 </html>

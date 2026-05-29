@@ -1,0 +1,795 @@
+/* ============================================================
+   TASKFLOW — style.css
+   A modern, dark-mode To-Do List stylesheet.
+
+   TABLE OF CONTENTS
+   1. CSS Custom Properties (Design Tokens)
+   2. Reset & Base Styles
+   3. Background Decoration
+   4. App Container (Main Card)
+   5. Header & Stats
+   6. Progress Bar
+   7. Input Section
+   8. Filter Tabs
+   9. Task List & Task Items
+   10. Checkbox
+   11. Delete Button
+   12. Empty State
+   13. Footer
+   14. Animations & Keyframes
+   15. Responsive (Mobile)
+   ============================================================ */
+
+
+/* ============================================================
+   1. CSS CUSTOM PROPERTIES (Design Tokens)
+   Define all colours, spacing, and radii in one place so it's
+   easy to restyle the whole app by changing just these values.
+   ============================================================ */
+:root {
+  /* -- Colour Palette -- */
+  --clr-bg:           #0d0f14;     /* deepest background */
+  --clr-surface:      #161920;     /* card background */
+  --clr-surface-2:    #1e2230;     /* slightly lighter surface */
+  --clr-border:       rgba(255,255,255,0.07);
+  --clr-text:         #e8eaf0;     /* primary text */
+  --clr-text-muted:   #6b7280;     /* secondary / hint text */
+  --clr-accent:       #7c6ef6;     /* purple accent */
+  --clr-accent-2:     #a78bfa;     /* lighter purple for gradients */
+  --clr-accent-glow:  rgba(124,110,246,0.35);
+  --clr-success:      #34d399;     /* green for completed */
+  --clr-danger:       #f87171;     /* red for delete */
+  --clr-danger-bg:    rgba(248,113,113,0.12);
+
+  /* -- Gradients -- */
+  --grad-accent:  linear-gradient(135deg, var(--clr-accent), var(--clr-accent-2));
+  --grad-surface: linear-gradient(160deg, #1e2230 0%, #161920 100%);
+
+  /* -- Shadows -- */
+  --shadow-card:  0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px var(--clr-border);
+  --shadow-input: 0 0 0 3px var(--clr-accent-glow);
+  --shadow-btn:   0 4px 20px var(--clr-accent-glow);
+  --shadow-task:  0 2px 8px rgba(0,0,0,0.25);
+
+  /* -- Border Radius -- */
+  --radius-sm:   8px;
+  --radius-md:   14px;
+  --radius-lg:   20px;
+  --radius-xl:   28px;
+  --radius-full: 9999px;
+
+  /* -- Spacing -- */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  32px;
+
+  /* -- Typography -- */
+  --font-base: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* -- Transitions -- */
+  --transition-fast:   0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-slow:   0.4s ease;
+}
+
+
+/* ============================================================
+   2. RESET & BASE STYLES
+   Normalize browser defaults and apply our base font / colours.
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-base);
+  background-color: var(--clr-bg);
+  color: var(--clr-text);
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;       /* align to top so card can scroll */
+  justify-content: center;
+  padding: var(--space-xl) var(--space-md);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Remove default list styling */
+ul, ol { list-style: none; }
+
+/* Accessible focus outline for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--clr-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+
+/* ============================================================
+   3. BACKGROUND DECORATION
+   Animated gradient blobs that give the page visual depth.
+   They use aria-hidden so screen readers ignore them.
+   ============================================================ */
+.bg-blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+  animation: blobFloat 12s ease-in-out infinite alternate;
+}
+
+.bg-blob--1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #7c6ef6, transparent 70%);
+  top: -150px;
+  left: -100px;
+  animation-delay: 0s;
+}
+
+.bg-blob--2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #a78bfa, transparent 70%);
+  bottom: -100px;
+  right: -80px;
+  animation-delay: -6s;
+}
+
+@keyframes blobFloat {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(30px, 20px) scale(1.08); }
+}
+
+
+/* ============================================================
+   4. APP CONTAINER (MAIN CARD)
+   The main glassmorphism card centred on the page.
+   ============================================================ */
+.app-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 620px;
+  background: var(--grad-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-xl);
+  animation: cardEntrance 0.6s cubic-bezier(0.22,1,0.36,1) both;
+  /* Subtle backdrop blur for glassmorphism look */
+  backdrop-filter: blur(2px);
+}
+
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* ============================================================
+   5. HEADER & STATS
+   App logo, title, subtitle, and live task counters.
+   ============================================================ */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+/* Glowing accent logo symbol */
+.app-logo {
+  font-size: 2rem;
+  background: var(--grad-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 12px var(--clr-accent-glow));
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.app-title-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-title {
+  font-size: clamp(1.5rem, 4vw, 1.9rem);
+  font-weight: 700;
+  background: var(--grad-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.app-subtitle {
+  font-size: 0.8rem;
+  color: var(--clr-text-muted);
+  font-weight: 400;
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+
+/* Stat pills row */
+.task-stats {
+  display: flex;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.stat-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--clr-surface-2);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: 6px 14px;
+  min-width: 52px;
+  transition: border-color var(--transition-normal);
+}
+
+.stat-pill--done {
+  border-color: rgba(52, 211, 153, 0.2);
+}
+
+.stat-number {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--clr-accent-2);
+  line-height: 1;
+  transition: color var(--transition-fast);
+}
+
+.stat-pill--done .stat-number {
+  color: var(--clr-success);
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  color: var(--clr-text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+
+/* ============================================================
+   6. PROGRESS BAR
+   Thin animated bar below the header showing % complete.
+   ============================================================ */
+.progress-bar-wrap {
+  height: 6px;
+  background: var(--clr-surface-2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-lg);
+  border: 1px solid var(--clr-border);
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--grad-accent);
+  border-radius: var(--radius-full);
+  width: 0%;                          /* set via JS */
+  transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 10px var(--clr-accent-glow);
+}
+
+
+/* ============================================================
+   7. INPUT SECTION
+   The task-entry form with an input field and an Add button.
+   ============================================================ */
+.input-section {
+  margin-bottom: var(--space-md);
+}
+
+.input-form {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* The text input where the user types a task */
+.task-input {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 18px;
+  background: var(--clr-surface-2);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  color: var(--clr-text);
+  font-family: var(--font-base);
+  font-size: 0.95rem;
+  font-weight: 400;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow   var(--transition-fast);
+  outline: none;
+}
+
+.task-input::placeholder {
+  color: var(--clr-text-muted);
+}
+
+/* Highlight the input when the user focuses it */
+.task-input:focus {
+  border-color: var(--clr-accent);
+  box-shadow: var(--shadow-input);
+}
+
+/* The "Add" button */
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 22px;
+  background: var(--grad-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-base);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform     var(--transition-fast),
+    box-shadow    var(--transition-fast),
+    filter        var(--transition-fast);
+  white-space: nowrap;
+  box-shadow: var(--shadow-btn);
+}
+
+.add-btn__icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  font-weight: 300;
+}
+
+.add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px var(--clr-accent-glow);
+  filter: brightness(1.1);
+}
+
+.add-btn:active {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+
+/* Small character counter below the input */
+.char-counter {
+  font-size: 0.72rem;
+  color: var(--clr-text-muted);
+  text-align: right;
+  margin-top: 6px;
+  transition: color var(--transition-fast);
+}
+
+/* Turn red when user is near the 120-char limit */
+.char-counter.near-limit {
+  color: var(--clr-danger);
+}
+
+
+/* ============================================================
+   8. FILTER TABS
+   "All / Active / Completed" navigation pills.
+   ============================================================ */
+.filter-tabs {
+  display: flex;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+  background: var(--clr-surface-2);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: 4px;
+}
+
+.filter-tab {
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--clr-text-muted);
+  font-family: var(--font-base);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background   var(--transition-fast),
+    color        var(--transition-fast);
+}
+
+.filter-tab:hover {
+  color: var(--clr-text);
+}
+
+/* Active tab is highlighted with accent colour */
+.filter-tab--active {
+  background: var(--grad-accent);
+  color: #fff !important;
+  box-shadow: 0 2px 10px var(--clr-accent-glow);
+}
+
+
+/* ============================================================
+   9. TASK LIST & TASK ITEMS
+   The scrollable list of to-do items.
+   ============================================================ */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 50vh;          /* scroll if list gets very long */
+  overflow-y: auto;
+  padding-right: 4px;        /* room for the custom scrollbar */
+}
+
+/* Custom scrollbar styling (Chrome/Edge/Safari) */
+.task-list::-webkit-scrollbar {
+  width: 5px;
+}
+.task-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.task-list::-webkit-scrollbar-thumb {
+  background: var(--clr-border);
+  border-radius: var(--radius-full);
+}
+.task-list::-webkit-scrollbar-thumb:hover {
+  background: var(--clr-accent);
+}
+
+/* Individual task card */
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 14px var(--space-md);
+  background: var(--clr-surface-2);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-task);
+  transition:
+    border-color var(--transition-normal),
+    background   var(--transition-normal),
+    transform    var(--transition-fast),
+    opacity      var(--transition-normal);
+  cursor: default;
+
+  /* Entrance animation when a task is first added */
+  animation: taskSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes taskSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.task-item:hover {
+  border-color: rgba(124, 110, 246, 0.25);
+  transform: translateY(-1px);
+  background: #22263a;
+}
+
+/* Completed task — dimmed with a green-tinted border */
+.task-item.completed {
+  border-color: rgba(52, 211, 153, 0.15);
+  opacity: 0.7;
+}
+
+/* Class added right before JS removes the element, triggers exit animation */
+.task-item.removing {
+  animation: taskSlideOut 0.3s ease forwards;
+}
+
+@keyframes taskSlideOut {
+  to {
+    opacity: 0;
+    transform: translateX(30px) scale(0.95);
+  }
+}
+
+/* The task label text */
+.task-text {
+  flex: 1;
+  font-size: 0.93rem;
+  font-weight: 400;
+  color: var(--clr-text);
+  line-height: 1.5;
+  word-break: break-word;
+  transition: color var(--transition-normal);
+}
+
+/* Strike-through and muted colour when a task is completed */
+.task-item.completed .task-text {
+  text-decoration: line-through;
+  color: var(--clr-text-muted);
+}
+
+
+/* ============================================================
+   10. CUSTOM CHECKBOX
+   A styled checkbox with an animated checkmark.
+   ============================================================ */
+.task-checkbox {
+  /* Hide the browser's default checkbox */
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border: 2px solid var(--clr-border);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition:
+    border-color  var(--transition-fast),
+    background    var(--transition-fast),
+    box-shadow    var(--transition-fast);
+}
+
+.task-checkbox:hover {
+  border-color: var(--clr-accent);
+  box-shadow: 0 0 0 3px rgba(124, 110, 246, 0.15);
+}
+
+/* Checked state: filled gradient + checkmark */
+.task-checkbox:checked {
+  background: var(--grad-accent);
+  border-color: transparent;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15);
+}
+
+/* Animated SVG-style checkmark using a CSS pseudo-element */
+.task-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 6px;
+  height: 11px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+  animation: checkPop 0.2s ease both;
+}
+
+@keyframes checkPop {
+  from { opacity: 0; transform: rotate(45deg) scale(0.5); }
+  to   { opacity: 1; transform: rotate(45deg) scale(1); }
+}
+
+
+/* ============================================================
+   11. DELETE BUTTON
+   A small icon button on each task that removes it.
+   ============================================================ */
+.delete-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--clr-text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    background    var(--transition-fast),
+    color         var(--transition-fast),
+    border-color  var(--transition-fast),
+    transform     var(--transition-fast);
+  line-height: 1;
+}
+
+.delete-btn:hover {
+  background: var(--clr-danger-bg);
+  color: var(--clr-danger);
+  border-color: rgba(248, 113, 113, 0.2);
+  transform: scale(1.1);
+}
+
+.delete-btn:active {
+  transform: scale(0.95);
+}
+
+
+/* ============================================================
+   12. EMPTY STATE
+   Shown when there are no tasks matching the current filter.
+   ============================================================ */
+.empty-state {
+  display: none;             /* hidden by default; JS toggles this */
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-xl) var(--space-md);
+  color: var(--clr-text-muted);
+  animation: fadeIn 0.4s ease both;
+}
+
+/* JS adds this class to make it visible */
+.empty-state.visible {
+  display: flex;
+}
+
+.empty-state__icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-md);
+  filter: grayscale(0.3);
+  animation: iconFloat 3s ease-in-out infinite alternate;
+}
+
+@keyframes iconFloat {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-8px); }
+}
+
+.empty-state__text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--clr-text-muted);
+  margin-bottom: 4px;
+}
+
+.empty-state__hint {
+  font-size: 0.82rem;
+  color: var(--clr-text-muted);
+  opacity: 0.6;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ============================================================
+   13. FOOTER
+   Shows remaining task count and a "Clear completed" button.
+   ============================================================ */
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--clr-border);
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.footer-count {
+  font-size: 0.82rem;
+  color: var(--clr-text-muted);
+}
+
+.clear-btn {
+  padding: 7px 14px;
+  background: transparent;
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  color: var(--clr-text-muted);
+  font-family: var(--font-base);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    background    var(--transition-fast),
+    color         var(--transition-fast),
+    border-color  var(--transition-fast);
+}
+
+.clear-btn:hover {
+  background: var(--clr-danger-bg);
+  color: var(--clr-danger);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+
+/* ============================================================
+   14. ANIMATIONS & KEYFRAMES
+   Additional shared animation utilities.
+   ============================================================ */
+
+/* "Shake" animation for invalid input submission */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-8px); }
+  40%       { transform: translateX(8px); }
+  60%       { transform: translateX(-5px); }
+  80%       { transform: translateX(5px); }
+}
+
+.input-shake {
+  animation: shake 0.35s ease both;
+  border-color: var(--clr-danger) !important;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.25) !important;
+}
+
+/* "Bounce" for the Add button on success */
+@keyframes btnPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+.btn-pop { animation: btnPop 0.2s ease both; }
+
+
+/* ============================================================
+   15. RESPONSIVE — MOBILE
+   Adjustments for smaller screens (< 480px).
+   ============================================================ */
+@media (max-width: 480px) {
+  body {
+    padding: var(--space-md) var(--space-sm);
+  }
+
+  .app-container {
+    padding: var(--space-lg) var(--space-md);
+    border-radius: var(--radius-lg);
+  }
+
+  .app-header {
+    gap: var(--space-sm);
+  }
+
+  .app-logo {
+    font-size: 1.6rem;
+  }
+
+  /* Stack the Add button below the input on very small screens */
+  .input-form {
+    flex-direction: column;
+  }
+
+  .add-btn {
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .task-stats {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .task-list {
+    max-height: 55vh;
+  }
+}
